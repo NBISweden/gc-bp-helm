@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    service: celery-beat
+  name: celery-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: celery-beat
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: celery-beat
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - "cd /app && celery -A config beat 
+                --scheduler django_celery_beat.schedulers:DatabaseScheduler 
+                "
+          env:
+            - name: DEBUG
+              value: "true"
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres-secret
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres-secret
+          image: public.ecr.aws/diag-nijmegen/grand-challenge/web:latest
+          name: celery-beat
+          resources: {}
+      restartPolicy: Always
+      enableServiceLinks: false

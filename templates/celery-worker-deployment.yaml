@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    service: celery-worker
+  name: celery-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: celery-worker
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: celery-worker
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - cd /app && celery -A config worker -l info -c 1 -Q celery,workstations-eu-central-1
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: accesskey
+                  name: minio-secret
+            - name: AWS_S3_ENDPOINT_URL
+              value: http://minio:9000
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secretkey
+                  name: minio-secret
+            - name: COMPONENTS_DEFAULT_BACKEND
+              value: grandchallenge.components.backends.docker.DockerExecutor
+            - name: COMPONENTS_REGISTRY_INSECURE
+              value: "true"
+            - name: DEBUG
+              value: "true"
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres-secret
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres-secret
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: WORKBENCH_API_URL
+              value: ${WORKBENCH_API_URL-}
+            - name: WORKBENCH_SECRET_KEY
+              value: ${WORKBENCH_SECRET_KEY-}
+          image: public.ecr.aws/diag-nijmegen/grand-challenge/web:latest
+          name: celery-worker
+          resources: {}
+      hostname: celery-worker
+      restartPolicy: Always
+      enableServiceLinks: false

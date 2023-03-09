@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+  labels:
+    service: postgres
+  name: postgres
+spec:
+  replicas: 1
+  serviceName: postgres
+  selector:
+    matchLabels:
+      service: postgres
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: postgres
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres-secret
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres-secret
+          image: postgres:14
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - grandchallenge
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: postgres
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data/
+              name: postgres-data
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            # NOTE: This is a pretty wild guess
+            storage: 1Gi

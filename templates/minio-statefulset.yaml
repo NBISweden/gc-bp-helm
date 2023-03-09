@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+  labels:
+    service: minio
+  name: minio
+spec:
+  replicas: 1
+  serviceName: minio
+  selector:
+    matchLabels:
+      service: minio
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: minio
+    spec:
+      containers:
+        - args:
+            - -c
+            - >
+              mkdir -p /data/grand-challenge-private/
+              /data/grand-challenge-protected/
+              /data/grand-challenge-public/
+              /data/grand-challenge-uploads/
+              /data/grand-challenge-components-inputs/
+              /data/grand-challenge-components-outputs/ &&
+              minio --compat server /data
+          command:
+            - /bin/sh
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  key: accesskey
+                  name: minio-secret
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: secretkey
+                  name: minio-secret
+          image: minio/minio
+          name: minio
+          ports:
+            - containerPort: 9000
+          resources: {}
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 600
+            failureThreshold: 30
+            timeoutSeconds: 8
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 5
+            failureThreshold: 4
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /data/
+              name: minio-data
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: minio-data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            # NOTE: This is a pretty wild guess
+            storage: 1Gi

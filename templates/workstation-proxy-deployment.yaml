@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: workstation-proxy
+  name: workstation-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: workstation-proxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        service: workstation-proxy
+    spec:
+      containers:
+        - args:
+            - --entrypoints.traefik.address=:8081
+            - --entrypoints.metrics.address=:9101
+            - --entrypoints.workstation-http.address=:8000
+            - --entrypoints.workstation-websocket.address=:8001
+            - --api=true
+            - --api.insecure=true
+            - --ping=true
+            - --ping.entryPoint=traefik
+            - --accesslog=true
+            - --providers.docker=true
+            - --providers.docker.endpoint=unix:///var/run/docker.sock
+            - --providers.docker.exposedByDefault=false
+            - --providers.docker.network=workstations
+          image: traefik:2.1
+          name: workstation-proxy
+          ports:
+            - containerPort: 8081
+            - containerPort: 9101
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: dockersock
+      restartPolicy: Always
+      volumes:
+        - name: dockersock
+          hostPath:
+            type: File
+            path: /var/run/docker.sock
+status: {}

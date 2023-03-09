@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+  labels:
+    service: registry
+  name: registry
+spec:
+  replicas: 1
+  serviceName: registry
+  selector:
+    matchLabels:
+      service: registry
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: registry
+    spec:
+      containers:
+        - env:
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: "true"
+          image: registry:2.7
+          name: registry
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/registry
+              name: registry-data
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: registry-data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            # NOTE: This is a pretty wild guess
+            storage: 1Gi

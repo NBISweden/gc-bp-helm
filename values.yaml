@@ -1,0 +1,10 @@
+
+
+postgres:
+  username: username
+  password: password
+  database: database
+
+minio:
+  accesskey: accesskey
+  secretkey: secretkey

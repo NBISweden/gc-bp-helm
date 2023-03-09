@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: http
+  name: http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: http
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        service: http
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - " envsubst '${APP_SERVER_HOST} ${SERVER_NAME}
+                  ${SENDFILE_STATUS} ${DATA_STORE_HOSTNAME}
+                  ${DATA_STORE_PORT} ${WORKSTATION_PROXY_HOSTNAME}
+                  ${WORKSTATION_PROXY_HTTP_PORT}
+                  ${WORKSTATION_PROXY_WEBSOCKET_PORT}' <
+                    /tmp/nginx.conf.template > /etc/nginx/nginx.conf &&
+                openssl req -x509 -newkey rsa:4096 -keyout
+                  /etc/ssl/private/privkey.pem
+                  -out /etc/ssl/certs/fullchain.pem
+                  -days 365 -nodes
+                  -subj \"/CN=${SERVER_NAME}\" && nginx -g 'daemon off;'"
+          env:
+            - name: APP_SERVER_HOST
+              value: web
+            - name: DATA_STORE_HOSTNAME
+              value: minio
+            - name: DATA_STORE_PORT
+              value: "9000"
+            - name: SENDFILE_STATUS
+              value: "off"
+            - name: SERVER_NAME
+              value: gc.localhost
+            - name: WORKSTATION_PROXY_HOSTNAME
+              value: workstation-proxy
+            - name: WORKSTATION_PROXY_HTTP_PORT
+              value: "8000"
+            - name: WORKSTATION_PROXY_WEBSOCKET_PORT
+              value: "8001"
+          image: public.ecr.aws/diag-nijmegen/grand-challenge/http:latest
+          name: http
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          resources: {}
+      restartPolicy: Always

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-driver
+data:
+  kubernetes.py: |{{ .Files.Get "kubernetes.py" | nindent 4 }}
+

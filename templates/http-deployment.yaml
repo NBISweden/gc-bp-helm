@@ -47,7 +47,7 @@ spec:
               value: "8000"
             - name: WORKSTATION_PROXY_WEBSOCKET_PORT
               value: "8001"
-          image: public.ecr.aws/diag-nijmegen/grand-challenge/http:latest
+          image: {{ .Values.images.http }}
           name: http
           ports:
             - containerPort: 80

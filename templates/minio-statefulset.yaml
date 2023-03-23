@@ -41,7 +41,7 @@ spec:
                 secretKeyRef:
                   key: secretkey
                   name: minio-secret
-          image: minio/minio
+          image: {{ .Values.images.minio }}
           name: minio
           ports:
             - containerPort: 9000

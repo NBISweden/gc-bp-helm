@@ -34,7 +34,7 @@ spec:
                 secretKeyRef:
                   key: username
                   name: postgres-secret
-          image: postgres:14
+          image: {{ .Values.images.postgres }}
           livenessProbe:
             exec:
               command:

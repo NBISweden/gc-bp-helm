@@ -42,7 +42,7 @@ spec:
                 secretKeyRef:
                   key: username
                   name: postgres-secret
-          image: public.ecr.aws/diag-nijmegen/grand-challenge/web:latest
+          image: {{ .Values.images.web }}
           name: celery-beat
           resources: {}
       restartPolicy: Always

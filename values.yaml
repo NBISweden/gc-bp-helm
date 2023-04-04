@@ -1,6 +1,10 @@
 
 domainName: storprovning.test
 
+log:
+  grandChallengeLevel: "DEBUG"
+  djangoLevel: "INFO"
+
 certificates:
   invalidWorkaround: true
   issuer: selfsign-issuer

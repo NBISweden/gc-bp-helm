@@ -45,6 +45,10 @@ spec:
               value: "true"
             - name: DEBUG
               value: "true"
+            - name: GRAND_CHALLENGE_LOG_LEVEL
+              value: {{ .Values.log.grandChallengeLevel }}
+            - name: DJANGO_LOG_LEVEL
+              value: {{ .Values.log.djangoLevel }}
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:

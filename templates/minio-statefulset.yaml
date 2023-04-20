@@ -21,12 +21,7 @@ spec:
         - args:
             - -c
             - >
-              mkdir -p /data/grand-challenge-private/
-              /data/grand-challenge-protected/
-              /data/grand-challenge-public/
-              /data/grand-challenge-uploads/
-              /data/grand-challenge-components-inputs/
-              /data/grand-challenge-components-outputs/ &&
+              mkdir -p /data/ &&
               minio --compat server /data
           command:
             - /bin/sh
@@ -63,6 +58,46 @@ spec:
           volumeMounts:
             - mountPath: /data/
               name: minio-data
+        - args:
+            - -c
+            - >
+                i=0;
+                while [ "$i" -lt 60 ]; do
+                  if curl -s http://127.0.0.1:9000/ ; then
+                    break
+                  fi
+                  sleep 1;
+                  i=$((i+1))
+                done;
+                mc alias set local http://127.0.0.1:9000/ "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" &&
+                set -x &&
+                mc mb --ignore-existing local/grand-challenge-private &&
+                mc mb --ignore-existing local/grand-challenge-protected &&
+                mc mb --ignore-existing local/grand-challenge-public &&
+                mc mb --ignore-existing local/grand-challenge-uploads &&
+                mc mb --ignore-existing local/grand-challenge-components-inputs &&
+                mc mb --ignore-existing local/grand-challenge-components-outputs &&
+                mc anonymous set download local/grand-challenge-public &&
+                while true; do
+                  sleep 60;
+                done
+
+          command:
+            - /bin/bash
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  key: accesskey
+                  name: minio-secret
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: secretkey
+                  name: minio-secret
+          image: {{ .Values.images.mc }}
+          name: minio-setup
+          resources: {}
       restartPolicy: Always
   volumeClaimTemplates:
     - metadata:

@@ -5,7 +5,7 @@ debug: "true"
 
 log:
   grandChallengeLevel: "DEBUG"
-  djangoLevel: "INFO"
+  djangoLevel: "DEBUG"
 
 certificates:
   invalidWorkaround: true

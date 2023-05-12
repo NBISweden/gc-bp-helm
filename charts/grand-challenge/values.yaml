@@ -14,7 +14,7 @@ certificates:
   handle: true
 
 images:
-  web: public.ecr.aws/diag-nijmegen/grand-challenge/web@sha256:7d37247e2ee25ab13a773e0b08ad0d7e175bd05c58c9703b9e1befe17db7d953
+  web: public.ecr.aws/diag-nijmegen/grand-challenge/web@sha256:8ad5fb22a651550dbe980c29fa5cbc88ebf146c96297b4c39a3e3390e0ccb07b
   http: public.ecr.aws/diag-nijmegen/grand-challenge/http@sha256:9b3183cb3047c67f8e5e6d6734ddef992f02a112368f5eed61b1238b2de0fbeb
   minio: minio/minio@sha256:02b9d0234025a31b1fb2a52697b62a18a4fbd0db03cbd83dfc09fc48773b718c
   mc: minio/mc@sha256:1336f0994d5caad9106f273cfccee986a49cb23655b5a3c48cd5d19c05abb108

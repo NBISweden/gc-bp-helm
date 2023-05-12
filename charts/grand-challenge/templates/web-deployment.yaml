@@ -44,13 +44,13 @@ spec:
             - name: COMPONENTS_REGISTRY_INSECURE
               value: "true"
             - name: DEBUG
-              value: "true"
+              value: {{ quote .Values.debug }}
             - name: GRAND_CHALLENGE_LOG_LEVEL
               value: {{ .Values.log.grandChallengeLevel }}
             - name: DJANGO_LOG_LEVEL
               value: {{ .Values.log.djangoLevel }}
             - name: SESSION_COOKIE_DOMAIN
-              value: "{{ .Values.domainName }}"
+              value: ".{{ .Values.domainName }}"
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:

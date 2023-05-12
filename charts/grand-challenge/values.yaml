@@ -1,6 +1,8 @@
 
 domainName: storprovning.test
 
+debug: "true"
+
 log:
   grandChallengeLevel: "DEBUG"
   djangoLevel: "INFO"

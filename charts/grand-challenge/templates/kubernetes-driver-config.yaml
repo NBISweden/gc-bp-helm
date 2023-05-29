@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: kubernetes-driver
 data:
-  kubernetes.py: |{{ .Files.Get "kubernetes.py" | nindent 4 }}
+  kubernetes.py: |{{ .Files.Get "files/kubernetes.py" | nindent 4 }}
 

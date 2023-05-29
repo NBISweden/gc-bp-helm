@@ -22,7 +22,7 @@ spec:
         - args:
             - bash
             - -c
-            - cd /app && celery -A config worker -l info -c 1 -Q celery,workstations-eu-central-1
+            - cd /app && celery -A config worker --pool=solo -l info -c 1 -Q celery,workstations-eu-central-1,acks-late-2xlarge,acks-late-2xlarge-delay,acks-late-micro-short,acks-late-micro-short-delay
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:

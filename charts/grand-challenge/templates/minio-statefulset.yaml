@@ -78,6 +78,8 @@ spec:
                 mc mb --ignore-existing local/grand-challenge-components-inputs &&
                 mc mb --ignore-existing local/grand-challenge-components-outputs &&
                 mc anonymous set download local/grand-challenge-public &&
+                mc admin user add local "$COMPACC" "$COMPSEC" &&
+                mc admin policy attach local readwrite --user "$COMPACC" &&
                 while true; do
                   sleep 60;
                 done
@@ -85,6 +87,16 @@ spec:
           command:
             - /bin/bash
           env:
+            - name: COMPACC
+              valueFrom:
+                secretKeyRef:
+                  key: components-access
+                  name: minio-secret
+            - name: COMPSEC
+              valueFrom:
+                secretKeyRef:
+                  key: components-secret
+                  name: minio-secret
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:

@@ -28,3 +28,7 @@ postgres:
 minio:
   accesskey: accesskey
   secretkey: secretkey
+  componentskey: componentskey
+  componentssecret: componentssecret
+  url: https://storprovning.test
+  internal_url: http://minio:9000

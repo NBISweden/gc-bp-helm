@@ -34,10 +34,27 @@ spec:
                 secretKeyRef:
                   key: url
                   name: minio-secret
+{{ if .Values.minio.internal_url }}
+            - name: AWS_S3_INTERNAL_URL
+              valueFrom:
+                secretKeyRef:
+                  key: internal_url
+                  name: minio-secret
+{{ end }}
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   key: secretkey
+                  name: minio-secret
+            - name: COMPONENTS_DOCKER_TASK_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: components-access
+                  name: minio-secret
+            - name: COMPONENTS_DOCKER_TASK_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: components-secret
                   name: minio-secret
             - name: COMPONENTS_DEFAULT_BACKEND
               value: grandchallenge.components.backends.kubernetes.KubernetesExecutor

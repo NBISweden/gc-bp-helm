@@ -1,11 +1,11 @@
 
 domainName: storprovning.test
 
-debug: "true"
+debug: "false"
 
 log:
-  grandChallengeLevel: "DEBUG"
-  djangoLevel: "DEBUG"
+  grandChallengeLevel: "INFO"
+  djangoLevel: "INFO"
 
 certificates:
   invalidWorkaround: true

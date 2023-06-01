@@ -22,7 +22,7 @@ spec:
             - redis-server
             - --appendonly
             - "yes"
-          image: redis:5.0
+          image: {{ .Values.images.redis }}
           name: redis
           resources: {}
           volumeMounts:

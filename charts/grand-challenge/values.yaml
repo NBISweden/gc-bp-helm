@@ -14,11 +14,17 @@ certificates:
   handle: true
 
 images:
-  web: public.ecr.aws/diag-nijmegen/grand-challenge/web@sha256:8ad5fb22a651550dbe980c29fa5cbc88ebf146c96297b4c39a3e3390e0ccb07b
-  http: public.ecr.aws/diag-nijmegen/grand-challenge/http@sha256:9b3183cb3047c67f8e5e6d6734ddef992f02a112368f5eed61b1238b2de0fbeb
-  minio: minio/minio@sha256:02b9d0234025a31b1fb2a52697b62a18a4fbd0db03cbd83dfc09fc48773b718c
-  mc: minio/mc@sha256:1336f0994d5caad9106f273cfccee986a49cb23655b5a3c48cd5d19c05abb108
-  postgres: postgres@sha256:20ca3cae0626ba55c512d687adf72e3055e1233b074d9f80d379dcc012cc63b6
+  # :latest
+  web: public.ecr.aws/diag-nijmegen/grand-challenge/web@sha256:21378ccb95bcde589da6f30390a1674e7c3c7450f7ea3ba75c8e42c26620b622
+  http: public.ecr.aws/diag-nijmegen/grand-challenge/http@sha256:e171f7573d59b9c514a5274f791e2d748d25e96146224dd42745170c65170f5d
+  minio: minio/minio@sha256:d560100702023bf91fc9080bd672db1322c4c920d67938ada98696417c3a9609
+  mc: minio/mc@sha256:f66e5e41e34e15db8cc7b34fdcb7c4113faaa2a4d9156036b0bbde641ae8be26
+  # postgres:14
+  postgres: postgres@sha256:af8b776d4b97636bc4844075d4d6e93df1eed120d4817cafda9000de24f1bd8a
+  # redis:5.0
+  redis: redis@sha256:fc5ecd863862f89f04334b7cbb57e93c9790478ea8188a49f6e57b0967d38c75
+  # registry:2.7
+  registry: registry@sha256:169211e20e2f2d5d115674681eb79d21a217b296b43374b8e39f97fcf866b375
 
 postgres:
   username: username

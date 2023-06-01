@@ -21,7 +21,7 @@ spec:
         - env:
             - name: REGISTRY_STORAGE_DELETE_ENABLED
               value: "true"
-          image: registry:2.7
+          image: {{ .Values.images.registry }}
           name: registry
           resources: {}
           volumeMounts:

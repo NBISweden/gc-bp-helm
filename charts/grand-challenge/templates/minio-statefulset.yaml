@@ -79,7 +79,8 @@ spec:
                 mc mb --ignore-existing local/grand-challenge-components-outputs &&
                 mc anonymous set download local/grand-challenge-public &&
                 mc admin user add local "$COMPACC" "$COMPSEC" &&
-                mc admin policy attach local readwrite --user "$COMPACC" &&
+                ( mc admin policy attach local readwrite --user "$COMPACC" ||
+                  true Ignore any error directly before this) &&
                 while true; do
                   sleep 60;
                 done

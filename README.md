@@ -2,6 +2,8 @@
 
 This is a first approximation of grand-challenge helm charts.
 
-It currently does not support actually running grand-challenge
-in kubernetes environments not using docker engine as a container runtime, i.e.
-it is not ready for "real" use.
+
+## Image refresh
+
+A `docker pull` of the image should present a line like `Digest: sha256:...`
+you can just pick the digest from there.

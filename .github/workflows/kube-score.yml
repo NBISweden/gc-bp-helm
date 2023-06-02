@@ -22,7 +22,7 @@ jobs:
         - name: Run kube-score
           run: |
               set -e 
-              for p in charts/*;
+              for p in charts/*; do
                 helm template "$p" | kube-score score -
               done
         

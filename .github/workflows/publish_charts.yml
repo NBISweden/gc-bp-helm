@@ -1,0 +1,26 @@
+name: Kube-score-check
+
+
+on:
+  push:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  kube-score:
+    runs-on: ubuntu-22.04
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+        - name: Install kube-score
+          run: |
+              wget https://github.com/zegl/kube-score/releases/download/v1.16.1/kube-score_1.16.1_linux_amd64.tar.gz
+              tar xvf ./kube-score_1.16.1_linux_amd64.tar.gz && mv kube-score /usr/local/bin
+        - name: Run kube-score
+          run: |
+              cd charts/cytomine
+              helm template cytomine . | kube-score score -
+        

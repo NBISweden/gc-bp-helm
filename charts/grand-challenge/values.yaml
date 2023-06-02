@@ -19,6 +19,8 @@ images:
   http: public.ecr.aws/diag-nijmegen/grand-challenge/http@sha256:e171f7573d59b9c514a5274f791e2d748d25e96146224dd42745170c65170f5d
   minio: minio/minio@sha256:d560100702023bf91fc9080bd672db1322c4c920d67938ada98696417c3a9609
   mc: minio/mc@sha256:f66e5e41e34e15db8cc7b34fdcb7c4113faaa2a4d9156036b0bbde641ae8be26
+  flower: mher/flower@sha256:99b838ee6c06957c96212d091325f358351bd2d29780b444a6c5ed737b5d8990
+  traefik: traefik@sha256:7347d4d189642064337fe4eb615d14de2d44f287cb7e1189752fb7399a5ad843
   # postgres:14
   postgres: postgres@sha256:af8b776d4b97636bc4844075d4d6e93df1eed120d4817cafda9000de24f1bd8a
   # redis:5.0

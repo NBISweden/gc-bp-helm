@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes, container-security-context-user-group-id
   labels:
     service: workstation-proxy
   name: workstation-proxy
@@ -16,6 +18,10 @@ spec:
       labels:
         service: workstation-proxy
     spec:
+      securityContext:
+        runAsUser: 20000
+        runAsGroup: 20000
+      serviceAccountName: workstation-proxy
       containers:
         - args:
             - --entrypoints.traefik.address=:8081
@@ -27,23 +33,31 @@ spec:
             - --ping=true
             - --ping.entryPoint=traefik
             - --accesslog=true
-            - --providers.docker=true
-            - --providers.docker.endpoint=unix:///var/run/docker.sock
-            - --providers.docker.exposedByDefault=false
-            - --providers.docker.network=workstations
-          image: traefik:2.1
+            - --providers.kubernetesingress=true
+            - --providers.kubernetesingress.namespaces={{ .Values.namespace | default .Release.Namespace }}
+            - --providers.kubernetesingress=true
+          image: {{ .Values.images.traefik }}
           name: workstation-proxy
           ports:
             - containerPort: 8081
             - containerPort: 9101
-          resources: {}
+          resources:
+            limits:
+              cpu: "0.2"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "0.2"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           volumeMounts:
-            - mountPath: /var/run/docker.sock
-              name: dockersock
-      restartPolicy: Always
+            - name: temp
+              mountPath: /tmp
       volumes:
-        - name: dockersock
-          hostPath:
-            type: File
-            path: /var/run/docker.sock
+        - name: temp
+          emptyDir: {}
+      restartPolicy: Always
 status: {}

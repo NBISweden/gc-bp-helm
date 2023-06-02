@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
   labels:
     service: minio
   name: minio
@@ -17,6 +18,10 @@ spec:
       labels:
         service: minio
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 14000
+        runAsGroup: 14000
       containers:
         - args:
             - -c
@@ -40,7 +45,18 @@ spec:
           name: minio
           ports:
             - containerPort: 9000
-          resources: {}
+          resources:
+            limits:
+              cpu: 1
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            requests:
+              cpu: 1
+              memory: 64Mi
+              ephemeral-storage: 256Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
           livenessProbe:
             httpGet:
               path: /minio/health/live
@@ -52,15 +68,16 @@ spec:
             httpGet:
               path: /minio/health/live
               port: 9000
-            initialDelaySeconds: 5
-            failureThreshold: 4
-            timeoutSeconds: 5
+            initialDelaySeconds: 600
+            failureThreshold: 30
+            timeoutSeconds: 8
           volumeMounts:
             - mountPath: /data/
               name: minio-data
         - args:
             - -c
             - >
+                HOME=/tmp;
                 i=0;
                 while [ "$i" -lt 60 ]; do
                   if curl -s http://127.0.0.1:9000/ ; then
@@ -70,7 +87,8 @@ spec:
                   i=$((i+1))
                 done;
                 mc alias set local http://127.0.0.1:9000/ "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" &&
-                set -x &&
+                mc admin user add local "$COMPACC" "$COMPSEC" &&
+                set -x;
                 mc mb --ignore-existing local/grand-challenge-private &&
                 mc mb --ignore-existing local/grand-challenge-protected &&
                 mc mb --ignore-existing local/grand-challenge-public &&
@@ -78,13 +96,23 @@ spec:
                 mc mb --ignore-existing local/grand-challenge-components-inputs &&
                 mc mb --ignore-existing local/grand-challenge-components-outputs &&
                 mc anonymous set download local/grand-challenge-public &&
-                mc admin user add local "$COMPACC" "$COMPSEC" &&
                 ( mc admin policy attach local readwrite --user "$COMPACC" ||
                   true Ignore any error directly before this) &&
                 while true; do
                   sleep 60;
                 done
-
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "0.5"
+              memory: 16Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
           command:
             - /bin/bash
           env:
@@ -110,7 +138,12 @@ spec:
                   name: minio-secret
           image: {{ .Values.images.mc }}
           name: minio-setup
-          resources: {}
+          volumeMounts:
+            - mountPath: /tmp/
+              name: setup-tmp
+      volumes:
+        - name: setup-tmp
+          emptyDir: {}
       restartPolicy: Always
   volumeClaimTemplates:
     - metadata:

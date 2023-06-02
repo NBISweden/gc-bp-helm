@@ -266,6 +266,10 @@ class KubernetesExecutor(Executor):
             "metadata": {"name": f"{self.job_name}"},
             "spec": {
                 "template": {
+                    "metadata": {
+                        "labels":
+                          {"algorithm" : "job"}
+                    }
                     "spec": {
                         "containers": [
                             {

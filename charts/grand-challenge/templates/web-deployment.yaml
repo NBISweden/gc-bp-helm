@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
   labels:
     service: web
   name: web
@@ -18,6 +19,9 @@ spec:
       labels:
         service: web
     spec:
+      securityContext:
+        runAsUser: 16000
+        runAsGroup: 16000
       containers:
         - args:
             - bash
@@ -89,7 +93,18 @@ spec:
               value: "1"
           image: {{ .Values.images.web }}
           name: web
-          resources: {}
+          resources:
+            limits:
+              cpu: "16"
+              memory: 2Gi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "2"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           volumeMounts:
 {{ if .Values.certificates.invalidWorkaround }}
             - name: cert-volume
@@ -101,11 +116,24 @@ spec:
             - name: kubernetes-driver
               mountPath: /app/grandchallenge/components/backends/kubernetes.py
               subPath: kubernetes.py
+            - name: temp
+              mountPath: /app/scripts
 {{ if .Values.certificates.invalidWorkaround }}
       initContainers:
         - name: cert-fixer
           image: {{ .Values.images.web }}
-          resources: {}
+          resources:
+            limits:
+              cpu: "1"
+              memory: 32Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "1"
+              memory: 32Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
           command:
             - /bin/bash
             - -c
@@ -128,6 +156,8 @@ spec:
       serviceAccountName: gc-launcher
 
       volumes:
+        - name: temp
+          emptyDir: {}
         - name: kubernetes-driver
           configMap:
             name: kubernetes-driver

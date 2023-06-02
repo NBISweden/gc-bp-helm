@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: worksation-proxy
+spec:
+  podSelector:
+    matchLabels:
+      service: workstation-proxy
+  policyTypes:
+    - Egress
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              service: http
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 8001
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              algorithm: job
+      ports:
+        - protocol: TCP
+          port: 8000

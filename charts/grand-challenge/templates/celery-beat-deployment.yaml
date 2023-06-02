@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
   labels:
     service: celery-beat
   name: celery-beat
@@ -17,6 +18,9 @@ spec:
       labels:
         service: celery-beat
     spec:
+      securityContext:
+        runAsUser: 17000
+        runAsGroup: 17000
       containers:
         - args:
             - bash
@@ -44,6 +48,17 @@ spec:
                   name: postgres-secret
           image: {{ .Values.images.web }}
           name: celery-beat
-          resources: {}
+          resources:
+            limits:
+              cpu: "0.2"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "0.2"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
       restartPolicy: Always
       enableServiceLinks: false

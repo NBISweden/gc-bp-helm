@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres
+spec:
+  podSelector:
+    matchLabels:
+      service: postgres
+  policyTypes:
+    - Egress
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              service: web
+              service: celery-worker
+              service: celery-beat
+      ports:
+        - protocol: TCP
+          port: 5432
+  egress:

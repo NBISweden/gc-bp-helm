@@ -6,6 +6,7 @@ metadata:
     service: minio
   name: minio
 spec:
+  clusterIP: None
   ports:
     - name: "9000"
       port: 9000

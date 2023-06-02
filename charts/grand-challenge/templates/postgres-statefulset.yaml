@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes, container-security-context-user-group-id
   labels:
     service: postgres
   name: postgres
@@ -38,18 +39,43 @@ spec:
           livenessProbe:
             exec:
               command:
-                - pg_isready
-                - -U
-                - grandchallenge
+                - /bin/bash
+                - -c
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 5432
             failureThreshold: 5
             periodSeconds: 10
             timeoutSeconds: 5
           name: postgres
-          resources: {}
+          resources:
+            limits:
+              cpu: "4"
+              memory: 512Mi
+              ephemeral-storage: 1Gi
+            requests:
+              cpu: "0.2"
+              memory: 128Mi
+              ephemeral-storage: 1Gi
           volumeMounts:
             - mountPath: /var/lib/postgresql/data/
               name: postgres-data
+            - mountPath: /var/run/postgresql
+              name: temp
+            - mountPath: /tmp
+              name: temp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
       restartPolicy: Always
+      volumes:
+        - name: temp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: postgres-data

@@ -6,6 +6,7 @@ metadata:
     service: postgres
   name: postgres
 spec:
+  clusterIP: None
   ports:
     - name: "5432"
       port: 5432

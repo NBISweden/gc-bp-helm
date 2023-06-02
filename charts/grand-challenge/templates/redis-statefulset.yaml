@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes, container-security-context-user-group-id
   labels:
     service: redis
   name: redis
@@ -17,6 +18,10 @@ spec:
       labels:
         service: redis
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
       containers:
         - args:
             - redis-server
@@ -24,10 +29,21 @@ spec:
             - "yes"
           image: {{ .Values.images.redis }}
           name: redis
-          resources: {}
+          securityContext: 
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           volumeMounts:
             - mountPath: /data
               name: redis-data
+          resources:
+            limits:
+              cpu: "4"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "1"
+              memory: 64Mi
+              ephemeral-storage: 32Mi
       restartPolicy: Always
   volumeClaimTemplates:
     - metadata:

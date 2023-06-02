@@ -1,26 +1,31 @@
-name: Kube-score-check
-
+name: Publish charts
 
 on:
   push:
-  pull_request:
     branches:
-    - main
+      - main
 
 jobs:
-  kube-score:
-    runs-on: ubuntu-22.04
+  release:
+    runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-        - name: Install kube-score
-          run: |
-              wget https://github.com/zegl/kube-score/releases/download/v1.16.1/kube-score_1.16.1_linux_amd64.tar.gz
-              tar xvf ./kube-score_1.16.1_linux_amd64.tar.gz && mv kube-score /usr/local/bin
-        - name: Run kube-score
-          run: |
-              cd charts/cytomine
-              helm template cytomine . | kube-score score -
-        
+      - name: Checkout
+        uses: actions/checkout@v3.5.2
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3.5
+        with:
+          version: v3.4.0
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.5.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

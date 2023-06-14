@@ -20,7 +20,7 @@ spec:
         service: celery-worker
     spec:
       securityContext:
-        runAsUser: 18000
+        runAsUser: 999
         runAsGroup: 18000
       containers:
         - args:
@@ -97,7 +97,7 @@ spec:
             limits:
               cpu: "16"
               memory: 1Gi
-              ephemeral-storage: 32Mi
+              ephemeral-storage: 4Gi
             requests:
               cpu: "2"
               memory: 256Mi
@@ -113,6 +113,8 @@ spec:
             - name: kubernetes-driver
               mountPath: /app/grandchallenge/components/backends/kubernetes.py
               subPath: kubernetes.py
+            - name: temp
+              mountPath: /tmp
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -157,6 +159,8 @@ spec:
         - name: kubernetes-driver
           configMap:
             name: kubernetes-driver
+        - name: temp
+          emptyDir: {}
 {{ if .Values.certificates.invalidWorkaround }}
         - name: cert-volume
           emptyDir: {}

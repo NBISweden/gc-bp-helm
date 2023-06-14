@@ -108,9 +108,9 @@ class KubernetesExecutor(Executor):
 
     @classmethod
     def get_registry_ip(cls):
-        return cls.kubecall("/api/v1/namespaces/_:NS:_/services/registry").json()[
-            "spec"
-        ]["clusterIP"]
+        return cls.kubecall("/api/v1/namespaces/_:NS:_/pods/registry-0").json()[
+            "status"
+        ]["podIP"]
 
     @classmethod
     def create_job(cls, jobspec):
@@ -266,10 +266,7 @@ class KubernetesExecutor(Executor):
             "metadata": {"name": f"{self.job_name}"},
             "spec": {
                 "template": {
-                    "metadata": {
-                        "labels":
-                          {"algorithm" : "job"}
-                    }
+                    "metadata": {"labels": {"algorithm": "job"}},
                     "spec": {
                         "containers": [
                             {
@@ -282,7 +279,7 @@ class KubernetesExecutor(Executor):
                             }
                         ],
                         "restartPolicy": "Never",
-                    }
+                    },
                 },
                 "backoffLimit": 4,
             },

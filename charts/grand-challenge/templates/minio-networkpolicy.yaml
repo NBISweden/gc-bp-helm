@@ -14,8 +14,14 @@ spec:
         - podSelector:
             matchLabels:
               service: http
+        - podSelector:
+            matchLabels:
               service: web
+        - podSelector:
+            matchLabels:
               service: celery-worker
+        - podSelector:
+            matchLabels:
               algorithm: job
       ports:
         - protocol: TCP

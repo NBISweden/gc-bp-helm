@@ -18,6 +18,10 @@ spec:
       labels:
         service: postgres
     spec:
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
       containers:
         - env:
             - name: POSTGRES_DB
@@ -63,7 +67,7 @@ spec:
               memory: 128Mi
               ephemeral-storage: 1Gi
           volumeMounts:
-            - mountPath: /var/lib/postgresql/data/
+            - mountPath: /var/lib/postgresql
               name: postgres-data
             - mountPath: /var/run/postgresql
               name: temp
@@ -72,6 +76,32 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+      initContainers:
+        - image: {{ .Values.images.postgres }}
+          name: postgres-createdir
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+              ephemeral-storage: 1Gi
+            requests:
+              cpu: "0.2"
+              memory: 128Mi
+              ephemeral-storage: 1Gi
+          volumeMounts:
+            - mountPath: /postgres-data
+              name: postgres-data
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          command:
+            - /bin/bash
+            - -c
+            - >
+              set -x;
+              mkdir -p /postgres-data/data; 
+              chown -R 999:999 /postgres-data/data;
+              ls -l /postgres-data
       restartPolicy: Always
       volumes:
         - name: temp

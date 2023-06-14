@@ -29,7 +29,9 @@ spec:
                     /tmp/nginx.conf.template | 
                   sed -e 's,/etc/ssl/private/privkey.pem,/tmp/ng/privkey.pem,' 
                   -e 's,/etc/ssl/certs/fullchain.pem,/tmp/ng/fullchain.pem,' 
+                  -e 's,/etc/ssl/private/dhparams.pem,/tmp/ng/dhparams.pem,'
                   > /tmp/ng/nginx.conf &&
+                openssl dhparam -out /tmp/ng/dhparams.pem 2048 &&
                 openssl req -x509 -newkey rsa:4096 -keyout
                   /tmp/ng/privkey.pem
                   -out /tmp/ng/fullchain.pem

@@ -1,4 +1,6 @@
 domainName: storprovning.test
+publicIP: 192.168.49.2/32
+internalAPIIP: 10.96.0.1/32
 
 debug: "false"
 

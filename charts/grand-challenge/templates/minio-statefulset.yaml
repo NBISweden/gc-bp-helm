@@ -154,4 +154,4 @@ spec:
         resources:
           requests:
             # NOTE: This is a pretty wild guess
-            storage: 1Gi
+            storage: 5Gi

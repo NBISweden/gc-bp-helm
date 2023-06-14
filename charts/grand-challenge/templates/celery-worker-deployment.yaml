@@ -2,7 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kube-score/ignore: container-image-pull-policy, pod-probes
+    kube-score/ignore: >
+      container-image-pull-policy,
+      pod-probes,
+      container-security-context-user-group-id
   labels:
     service: celery-worker
   name: celery-worker

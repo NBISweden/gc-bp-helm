@@ -4,4 +4,5 @@ metadata:
   name: kubernetes-driver
 data:
   kubernetes.py: |{{ .Files.Get "files/kubernetes.py" | nindent 4 }}
+  registry.py: |{{ .Files.Get "files/registry.py" | nindent 4 }}
 

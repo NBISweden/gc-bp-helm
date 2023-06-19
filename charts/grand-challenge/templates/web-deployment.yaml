@@ -63,7 +63,28 @@ spec:
             - name: COMPONENTS_DEFAULT_BACKEND
               value: grandchallenge.components.backends.kubernetes.KubernetesExecutor
             - name: COMPONENTS_REGISTRY_INSECURE
-              value: "true"
+              value: "false"
+            # This wouldn't be needed if GC allowed for specifying credentials
+            - name: COMPONENTS_REGISTRY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  key: prefix
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: registry-secret
             - name: DEBUG
               value: {{ quote .Values.debug }}
             - name: GRAND_CHALLENGE_LOG_LEVEL
@@ -118,6 +139,9 @@ spec:
               subPath: kubernetes.py
             - name: temp
               mountPath: /app/scripts
+            - name: kubernetes-driver
+              mountPath: /app/grandchallenge/components/registry.py
+              subPath: registry.py
 {{ if .Values.certificates.invalidWorkaround }}
       initContainers:
         - name: cert-fixer

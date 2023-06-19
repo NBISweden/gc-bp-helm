@@ -109,14 +109,6 @@ class KubernetesExecutor(Executor):
     def get_pods(cls):
         return cls.kubecall("/api/v1/namespaces/_:NS:_/pods").json()["items"]
 
-    @staticmethod
-    def get_registry_with_prefix():
-        return (
-            os.environ.get("COMPONENTS_REGISTRY_REAL_URL")
-            + "/"
-            + os.environ.get("COMPONENTS_REGISTRY_REAL_PREFIX")
-        )
-
     @classmethod
     def create_job(cls, jobspec):
         r = cls.kubecall(
@@ -265,49 +257,6 @@ class KubernetesExecutor(Executor):
                 ]
             )
 
-        subprocess.run(
-            [
-                "/bin/sh",
-                "-c",
-                "crane auth login "
-                + os.environ.get("COMPONENTS_REGISTRY_REAL_URL")
-                + " -u '"
-                + os.environ.get("COMPONENTS_REGISTRY_REAL_USERNAME")
-                + "' -p '"
-                + os.environ.get("COMPONENTS_REGISTRY_REAL_PASSWORD")
-                + "'",
-            ],
-            check=True,
-            capture_output=True,
-        )
-
-        fname = f"/tmp/{str(uuid.uuid1())}.tar"
-
-        imgsrc = self._exec_image_repo_tag
-        imgdst = imgsrc.replace(
-            settings.COMPONENTS_REGISTRY_URL
-            + "/"
-            + settings.COMPONENTS_REGISTRY_PREFIX,
-            f"{self.get_registry_with_prefix()}",
-        )
-
-        # Assume insecure for now.
-        subprocess.run(
-            [
-                "/bin/sh",
-                "-c",
-                f"crane pull --insecure {self._exec_image_repo_tag} {fname}",
-            ],
-            check=True,
-            capture_output=True,
-        )
-
-        subprocess.run(
-            ["/bin/sh", "-c", f"crane push {fname} {imgdst}"],
-            check=True,
-            capture_output=True,
-        )
-
         jobspec = {
             "apiVersion": "batch/v1",
             "kind": "Job",
@@ -319,7 +268,7 @@ class KubernetesExecutor(Executor):
                         "containers": [
                             {
                                 "name": f"{self.job_name}-runner",
-                                "image": imgdst,
+                                "image": self._exec_image_repo_tag,
                                 "imagePullPolicy": "Always",
                                 "args": ["serve"],
                                 "env": environment,

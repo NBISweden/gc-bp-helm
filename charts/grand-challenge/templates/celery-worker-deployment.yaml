@@ -56,24 +56,24 @@ spec:
             - name: COMPONENTS_DEFAULT_BACKEND
               value: grandchallenge.components.backends.kubernetes.KubernetesExecutor
             - name: COMPONENTS_REGISTRY_INSECURE
-              value: "true"
+              value: "false"
             # This wouldn't be needed if GC allowed for specifying credentials
-            - name: COMPONENTS_REGISTRY_REAL_PASSWORD
+            - name: COMPONENTS_REGISTRY_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key: password
                   name: registry-secret
-            - name: COMPONENTS_REGISTRY_REAL_PREFIX
+            - name: COMPONENTS_REGISTRY_PREFIX
               valueFrom:
                 secretKeyRef:
                   key: prefix
                   name: registry-secret
-            - name: COMPONENTS_REGISTRY_REAL_URL
+            - name: COMPONENTS_REGISTRY_URL
               valueFrom:
                 secretKeyRef:
                   key: url
                   name: registry-secret
-            - name: COMPONENTS_REGISTRY_REAL_USERNAME
+            - name: COMPONENTS_REGISTRY_USERNAME
               valueFrom:
                 secretKeyRef:
                   key: username
@@ -137,6 +137,9 @@ spec:
             - name: kubernetes-driver
               mountPath: /app/grandchallenge/components/backends/kubernetes.py
               subPath: kubernetes.py
+            - name: kubernetes-driver
+              mountPath: /app/grandchallenge/components/registry.py
+              subPath: registry.py
             - name: temp
               mountPath: /tmp
             - name: temp

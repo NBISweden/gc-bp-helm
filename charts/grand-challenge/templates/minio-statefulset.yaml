@@ -61,14 +61,14 @@ spec:
             httpGet:
               path: /minio/health/live
               port: 9000
-            initialDelaySeconds: 600
+            initialDelaySeconds: 30
             failureThreshold: 30
             timeoutSeconds: 8
           readinessProbe:
             httpGet:
               path: /minio/health/live
               port: 9000
-            initialDelaySeconds: 600
+            initialDelaySeconds: 15
             failureThreshold: 30
             timeoutSeconds: 8
           volumeMounts:

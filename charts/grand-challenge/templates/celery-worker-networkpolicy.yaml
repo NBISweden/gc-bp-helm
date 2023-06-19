@@ -40,13 +40,29 @@ spec:
         - protocol: TCP
           port: 9000
     - to:
+        - podSelector:
+            matchLabels:
+              algorithm: job
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
         - ipBlock:
             cidr: {{ .Values.publicIP }}
         - ipBlock:
             cidr: {{ .Values.internalAPIIP }}
+        - ipBlock:
+            cidr: {{ .Values.registry.ip }}
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.internalAPIEndpoints }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.internalAPIPort }}
+
     - to:
         - namespaceSelector:
             matchLabels:

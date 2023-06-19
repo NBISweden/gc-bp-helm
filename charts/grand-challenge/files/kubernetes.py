@@ -8,6 +8,9 @@ from tempfile import TemporaryDirectory
 import os
 import boto3
 import datetime
+import subprocess
+import uuid
+import time
 
 import requests
 from dateutil.parser import isoparse
@@ -106,11 +109,13 @@ class KubernetesExecutor(Executor):
     def get_pods(cls):
         return cls.kubecall("/api/v1/namespaces/_:NS:_/pods").json()["items"]
 
-    @classmethod
-    def get_registry_ip(cls):
-        return cls.kubecall("/api/v1/namespaces/_:NS:_/pods/registry-0").json()[
-            "status"
-        ]["podIP"]
+    @staticmethod
+    def get_registry_with_prefix():
+        return (
+            os.environ.get("COMPONENTS_REGISTRY_REAL_URL")
+            + "/"
+            + os.environ.get("COMPONENTS_REGISTRY_REAL_PREFIX")
+        )
 
     @classmethod
     def create_job(cls, jobspec):
@@ -260,6 +265,49 @@ class KubernetesExecutor(Executor):
                 ]
             )
 
+        subprocess.run(
+            [
+                "/bin/sh",
+                "-c",
+                "crane auth login "
+                + os.environ.get("COMPONENTS_REGISTRY_REAL_URL")
+                + " -u '"
+                + os.environ.get("COMPONENTS_REGISTRY_REAL_USERNAME")
+                + "' -p '"
+                + os.environ.get("COMPONENTS_REGISTRY_REAL_PASSWORD")
+                + "'",
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+        fname = f"/tmp/{str(uuid.uuid1())}.tar"
+
+        imgsrc = self._exec_image_repo_tag
+        imgdst = imgsrc.replace(
+            settings.COMPONENTS_REGISTRY_URL
+            + "/"
+            + settings.COMPONENTS_REGISTRY_PREFIX,
+            f"{self.get_registry_with_prefix()}",
+        )
+
+        # Assume insecure for now.
+        subprocess.run(
+            [
+                "/bin/sh",
+                "-c",
+                f"crane pull --insecure {self._exec_image_repo_tag} {fname}",
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+        subprocess.run(
+            ["/bin/sh", "-c", f"crane push {fname} {imgdst}"],
+            check=True,
+            capture_output=True,
+        )
+
         jobspec = {
             "apiVersion": "batch/v1",
             "kind": "Job",
@@ -271,14 +319,24 @@ class KubernetesExecutor(Executor):
                         "containers": [
                             {
                                 "name": f"{self.job_name}-runner",
-                                "image": self._exec_image_repo_tag.replace(
-                                    "registry:5000", f"{self.get_registry_ip()}:5000"
-                                ),
+                                "image": imgdst,
+                                "imagePullPolicy": "Always",
                                 "args": ["serve"],
                                 "env": environment,
+                                "volumeMounts": [
+                                    {"name": "temp", "mountPath": "/tmp"},
+                                    {"name": "input", "mountPath": "/input"},
+                                    {"name": "output", "mountPath": "/output"},
+                                ],
                             }
                         ],
                         "restartPolicy": "Never",
+                        "imagePullSecrets": [{"name": "registry-pullsecret"}],
+                        "volumes": [
+                            {"name": "temp", "emptyDir": {}},
+                            {"name": "input", "emptyDir": {}},
+                            {"name": "output", "emptyDir": {}},
+                        ],
                     },
                 },
                 "backoffLimit": 4,
@@ -301,6 +359,7 @@ class KubernetesExecutor(Executor):
                 raise ComponentException("Time limit exceeded")
         finally:
             self._set_task_logs()
+            time.sleep(60)
             self.delete_job(name=self.job_name)
 
         logger.debug(f"Response from {response.text}")

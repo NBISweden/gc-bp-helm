@@ -1,6 +1,8 @@
 domainName: storprovning.test
 publicIP: 192.168.49.2/32
-internalAPIIP: 10.96.0.1/32
+internalAPIIP: 10.43.0.1/32
+internalAPIEndpoints: 10.69.0.0/16
+internalAPIPort: 6443
 
 debug: "false"
 
@@ -41,6 +43,15 @@ minio:
   componentssecret: componentssecret
   url: https://storprovning.test
   internal_url: http://minio:9000
+
+registry:
+  url: some.registry.name
+  prefix: prefix
+  username: USER
+  email: "aida-compute@nbis.se"
+  password: PASSWORD
+  # For network policy
+  ip: 10.0.0.1/32
 
 # To override if needed, should be automatic with helm install
 #namespace: yournamespace

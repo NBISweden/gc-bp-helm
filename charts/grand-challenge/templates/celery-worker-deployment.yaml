@@ -57,6 +57,27 @@ spec:
               value: grandchallenge.components.backends.kubernetes.KubernetesExecutor
             - name: COMPONENTS_REGISTRY_INSECURE
               value: "true"
+            # This wouldn't be needed if GC allowed for specifying credentials
+            - name: COMPONENTS_REGISTRY_REAL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_REAL_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  key: prefix
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_REAL_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_REAL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: registry-secret
             - name: COMPONENTS_DOCKER_TASK_AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -118,6 +139,8 @@ spec:
               subPath: kubernetes.py
             - name: temp
               mountPath: /tmp
+            - name: temp
+              mountPath: /home/django/.docker
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

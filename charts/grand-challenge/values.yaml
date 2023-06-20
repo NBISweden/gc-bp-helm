@@ -18,14 +18,14 @@ certificates:
 
 images:
   # :latest
-  web: public.ecr.aws/diag-nijmegen/grand-challenge/web@sha256:21378ccb95bcde589da6f30390a1674e7c3c7450f7ea3ba75c8e42c26620b622
-  http: public.ecr.aws/diag-nijmegen/grand-challenge/http@sha256:e171f7573d59b9c514a5274f791e2d748d25e96146224dd42745170c65170f5d
+  web: public.ecr.aws/diag-nijmegen/grand-challenge/web@sha256:cd1c945dd098c87195c79b98259b66a1756a5a17767d92d0ccf6287a06dd2b04
+  http: public.ecr.aws/diag-nijmegen/grand-challenge/http@sha256:66b2588bc2e37ef5cd9f0d6f32b2bf7f7816d28676de36e4ca7dc2462f30dcf1
   minio: minio/minio@sha256:d560100702023bf91fc9080bd672db1322c4c920d67938ada98696417c3a9609
   mc: minio/mc@sha256:f66e5e41e34e15db8cc7b34fdcb7c4113faaa2a4d9156036b0bbde641ae8be26
   flower: mher/flower@sha256:99b838ee6c06957c96212d091325f358351bd2d29780b444a6c5ed737b5d8990
   traefik: traefik@sha256:7347d4d189642064337fe4eb615d14de2d44f287cb7e1189752fb7399a5ad843
   # postgres:14
-  postgres: postgres@sha256:af8b776d4b97636bc4844075d4d6e93df1eed120d4817cafda9000de24f1bd8a
+  postgres: postgres@sha256:e0aaeef2c45b042a188300e68670724754d487977eb1e7daeec590a0a248625c
   # redis:5.0
   redis: redis@sha256:fc5ecd863862f89f04334b7cbb57e93c9790478ea8188a49f6e57b0967d38c75
   # registry:2.7

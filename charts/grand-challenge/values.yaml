@@ -1,6 +1,16 @@
+
+# Domain, will be used in ingress, provided for redirects etc.
 domainName: storprovning.test
+
+# CIDR notation of network covering externally visible IPs
 publicIP: 192.168.49.2/32
+
+# CIDR notation of network covering kubernetes service IP
+# in default network
 internalAPIIP: 10.43.0.1/32
+
+# CIDR notation of network covering kubernetes service
+# endpoint IPs in default network
 internalAPIEndpoints: 10.69.0.0/16
 internalAPIPort: 6443
 

@@ -67,7 +67,8 @@ spec:
               memory: 128Mi
               ephemeral-storage: 1Gi
           volumeMounts:
-            - mountPath: /var/lib/postgresql
+            - mountPath: /var/lib/postgresql/data
+              subPath: data
               name: postgres-data
             - mountPath: /var/run/postgresql
               name: temp

@@ -1,0 +1,11 @@
+apiVersion: v1
+entries:
+  grand-challenge:
+  - apiVersion: v2
+    description: Grand-challenge pre-release
+    name: grand-challenge
+    sources:
+    - https://github.com/NBISweden/gc-bp-helm
+    urls:
+    - https://github.com/nbisweden/gc-bp-helm/releases/download/0.1.0-pre/grand-challenge-0.1.0-pre.tgz
+    version: 0.1.0-pre

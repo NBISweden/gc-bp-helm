@@ -7,5 +7,5 @@ entries:
     sources:
     - https://github.com/NBISweden/gc-bp-helm
     urls:
-    - https://github.com/nbisweden/gc-bp-helm/releases/download/0.1.0-pre/grand-challenge-0.1.0-pre.tgz
-    version: 0.1.0-pre
+    - https://github.com/nbisweden/gc-bp-helm/releases/download/0.0.9/grand-challenge-0.0.9.tgz
+    version: 0.0.9

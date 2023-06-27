@@ -11,6 +11,3 @@ type: application
 
 version: 0.1.0
 
-# There are many parts of the cytomine system, so the cytomine-core version is
-# used as the app version.
-appVersion: "v3.1.0"

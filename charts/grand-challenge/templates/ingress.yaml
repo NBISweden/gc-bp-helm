@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gc-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 2000m
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+{{ if .Values.certificates.issuer }}  
+    cert-manager.io/issuer: "{{.Values.certificates.issuer}}"
+{{ end }}
+{{ if .Values.certificates.clusterIssuer }}  
+    cert-manager.io/cluster-issuer: "{{.Values.certificates.clusterIssuer}}"
+{{ end }}
+spec:
+{{ if .Values.certificates.handle }}  
+  tls:
+  - hosts:
+    - "{{ .Values.domainName }}"
+    secretName: ingress-tls
+{{  end  }}
+  rules:
+    - host: {{ .Values.domainName }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: http
+                port:
+                  number: 443

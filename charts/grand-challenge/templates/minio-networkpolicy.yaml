@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minio
+spec:
+  podSelector:
+    matchLabels:
+      service: minio
+  policyTypes:
+    - Egress
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              service: http
+        - podSelector:
+            matchLabels:
+              service: web
+        - podSelector:
+            matchLabels:
+              service: celery-worker
+        - podSelector:
+            matchLabels:
+              algorithm: job
+      ports:
+        - protocol: TCP
+          port: 9000
+  egress:

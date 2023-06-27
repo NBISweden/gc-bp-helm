@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
+  labels:
+    service: flower
+  name: flower
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: flower
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        service: flower
+    spec:
+      securityContext:
+        runAsUser: 19000
+        runAsGroup: 19000
+      containers:
+        - env:
+            - name: CELERY_BROKER_URL
+              value: redis://redis:6379/1
+          image: {{ .Values.images.flower }}
+          name: flower
+          ports:
+            - containerPort: 5555
+          resources:
+            limits:
+              cpu: "1"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "1"
+              memory: 64Mi
+              ephemeral-storage: 32Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5555
+            initialDelaySeconds: 20
+            failureThreshold: 30
+            timeoutSeconds: 8
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5555
+            initialDelaySeconds: 20
+            failureThreshold: 30
+            timeoutSeconds: 8
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+      enableServiceLinks: false
+      restartPolicy: Always

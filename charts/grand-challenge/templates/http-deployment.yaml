@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes, container-security-context-user-group-id
+  labels:
+    service: http
+  name: http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: http
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        service: http
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - " envsubst '${APP_SERVER_HOST} ${SERVER_NAME}
+                  ${SENDFILE_STATUS} ${DATA_STORE_HOSTNAME}
+                  ${DATA_STORE_PORT} ${WORKSTATION_PROXY_HOSTNAME}
+                  ${WORKSTATION_PROXY_HTTP_PORT}
+                  ${WORKSTATION_PROXY_WEBSOCKET_PORT}' <
+                    /tmp/nginx.conf.template | 
+                  sed -e 's,/etc/ssl/private/privkey.pem,/tmp/ng/privkey.pem,' 
+                  -e 's,/etc/ssl/certs/fullchain.pem,/tmp/ng/fullchain.pem,' 
+                  -e 's,/etc/ssl/private/dhparams.pem,/tmp/ng/dhparams.pem,'
+                  > /tmp/ng/nginx.conf &&
+                openssl dhparam -out /tmp/ng/dhparams.pem 2048 &&
+                openssl req -x509 -newkey rsa:4096 -keyout
+                  /tmp/ng/privkey.pem
+                  -out /tmp/ng/fullchain.pem
+                  -days 365 -nodes
+                  -subj \"/CN=${SERVER_NAME}\" && nginx -c /tmp/ng/nginx.conf -g 'daemon off;' 
+                  || sleep 3600"
+          env:
+            - name: APP_SERVER_HOST
+              value: web
+            - name: DATA_STORE_HOSTNAME
+              value: minio
+            - name: DATA_STORE_PORT
+              value: "9000"
+            - name: SENDFILE_STATUS
+              value: "off"
+            - name: SERVER_NAME
+              value: gc.localhost
+            - name: WORKSTATION_PROXY_HOSTNAME
+              value: workstation-proxy
+            - name: WORKSTATION_PROXY_HTTP_PORT
+              value: "8000"
+            - name: WORKSTATION_PROXY_WEBSOCKET_PORT
+              value: "8001"
+          image: {{ .Values.images.http }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 8
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 8
+          name: http
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          resources:
+            limits:
+              cpu: "4"
+              memory: 256Mi
+              ephemeral-storage: 2Gi
+            requests:
+              cpu: "1"
+              memory: 128Mi
+              ephemeral-storage: 2Gi
+          volumeMounts:
+            - name: temp
+              mountPath: /tmp/ng
+            - name: temp
+              mountPath: /var/cache/nginx/client_temp
+            - name: temp
+              mountPath: /var/cache/nginx/proxy_temp
+            - name: temp
+              mountPath: /var/cache/nginx/fastcgi_temp
+            - name: temp
+              mountPath: /var/cache/nginx/uwsgi_temp
+            - name: temp
+              mountPath: /var/cache/nginx/scgi_temp
+            - name: temp
+              mountPath: /var/run
+      restartPolicy: Always
+      volumes:
+        - name: temp
+          emptyDir: {}

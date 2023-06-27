@@ -1,0 +1,67 @@
+
+# Domain, will be used in ingress, provided for redirects etc.
+domainName: storprovning.test
+
+# CIDR notation of network covering externally visible IPs
+publicIP: 192.168.49.2/32
+
+# CIDR notation of network covering kubernetes service IP
+# in default network
+internalAPIIP: 10.43.0.1/32
+
+# CIDR notation of network covering kubernetes service
+# endpoint IPs in default network
+internalAPIEndpoints: 10.69.0.0/16
+internalAPIPort: 6443
+
+debug: "false"
+
+log:
+  grandChallengeLevel: "INFO"
+  djangoLevel: "INFO"
+
+certificates:
+  invalidWorkaround: true
+  issuer: selfsign-issuer
+  clusterIssuer: null
+  handle: true
+
+images:
+  # :latest
+  web: public.ecr.aws/diag-nijmegen/grand-challenge/web@sha256:cd1c945dd098c87195c79b98259b66a1756a5a17767d92d0ccf6287a06dd2b04
+  http: public.ecr.aws/diag-nijmegen/grand-challenge/http@sha256:66b2588bc2e37ef5cd9f0d6f32b2bf7f7816d28676de36e4ca7dc2462f30dcf1
+  minio: minio/minio@sha256:d560100702023bf91fc9080bd672db1322c4c920d67938ada98696417c3a9609
+  mc: minio/mc@sha256:f66e5e41e34e15db8cc7b34fdcb7c4113faaa2a4d9156036b0bbde641ae8be26
+  flower: mher/flower@sha256:99b838ee6c06957c96212d091325f358351bd2d29780b444a6c5ed737b5d8990
+  traefik: traefik@sha256:7347d4d189642064337fe4eb615d14de2d44f287cb7e1189752fb7399a5ad843
+  # postgres:14
+  postgres: postgres@sha256:e0aaeef2c45b042a188300e68670724754d487977eb1e7daeec590a0a248625c
+  # redis:5.0
+  redis: redis@sha256:fc5ecd863862f89f04334b7cbb57e93c9790478ea8188a49f6e57b0967d38c75
+  # registry:2.7
+  registry: registry@sha256:169211e20e2f2d5d115674681eb79d21a217b296b43374b8e39f97fcf866b375
+
+postgres:
+  username: username
+  password: password
+  database: database
+
+minio:
+  accesskey: accesskey
+  secretkey: secretkey
+  componentskey: componentskey
+  componentssecret: componentssecret
+  url: https://storprovning.test
+  internal_url: http://minio:9000
+
+registry:
+  url: some.registry.name
+  prefix: prefix
+  username: USER
+  email: "aida-compute@nbis.se"
+  password: PASSWORD
+  # For network policy
+  ip: 10.0.0.1/32
+
+# To override if needed, should be automatic with helm install
+#namespace: yournamespace

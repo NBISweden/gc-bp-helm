@@ -1,0 +1,199 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kube-score/ignore: >
+      container-image-pull-policy,
+      pod-probes,
+      container-security-context-user-group-id
+  labels:
+    service: celery-worker
+  name: celery-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: celery-worker
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: celery-worker
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 18000
+      containers:
+        - args:
+            - bash
+            - -c
+            - cd /app && celery -A config worker --pool=solo -l info -c 1 -Q celery,workstations-eu-central-1,acks-late-2xlarge,acks-late-2xlarge-delay,acks-late-micro-short,acks-late-micro-short-delay
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: accesskey
+                  name: minio-secret
+            - name: AWS_S3_ENDPOINT_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: minio-secret
+{{ if .Values.minio.internal_url }}
+            - name: AWS_S3_INTERNAL_URL
+              valueFrom:
+                secretKeyRef:
+                  key: internal_url
+                  name: minio-secret
+{{ end }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secretkey
+                  name: minio-secret
+            - name: COMPONENTS_DEFAULT_BACKEND
+              value: grandchallenge.components.backends.kubernetes.KubernetesExecutor
+            - name: COMPONENTS_REGISTRY_INSECURE
+              value: "false"
+            # This wouldn't be needed if GC allowed for specifying credentials
+            - name: COMPONENTS_REGISTRY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  key: prefix
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: registry-secret
+            - name: COMPONENTS_DOCKER_TASK_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: components-access
+                  name: minio-secret
+            - name: COMPONENTS_DOCKER_TASK_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: components-secret
+                  name: minio-secret
+            - name: DEBUG
+              value: {{ quote .Values.debug }}
+            - name: GRAND_CHALLENGE_LOG_LEVEL
+              value: {{ .Values.log.grandChallengeLevel }}
+            - name: DJANGO_LOG_LEVEL
+              value: {{ .Values.log.djangoLevel }}
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres-secret
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres-secret
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: WORKBENCH_API_URL
+              value: ${WORKBENCH_API_URL-}
+            - name: WORKBENCH_SECRET_KEY
+              value: ${WORKBENCH_SECRET_KEY-}
+          image: {{ .Values.images.web }}
+          name: celery-worker
+          resources:
+            limits:
+              cpu: "16"
+              memory: 1Gi
+              ephemeral-storage: 4Gi
+            requests:
+              cpu: "2"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+          volumeMounts:
+{{ if .Values.certificates.invalidWorkaround }}
+            - name: cert-volume
+              mountPath: /etc/ssl/certs
+            - name: cert-volume
+              mountPath: /opt/poetry/.venv/lib/python3.10/site-packages/certifi/cacert.pem
+              subPath: ca-certificates.crt
+{{- end }}
+            - name: kubernetes-driver
+              mountPath: /app/grandchallenge/components/backends/kubernetes.py
+              subPath: kubernetes.py
+            - name: kubernetes-driver
+              mountPath: /app/grandchallenge/components/registry.py
+              subPath: registry.py
+            - name: temp
+              mountPath: /tmp
+            - name: temp
+              mountPath: /home/django/.docker
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+{{ if .Values.certificates.invalidWorkaround }}
+      initContainers:
+        - name: cert-fixer
+          image: {{ .Values.images.web }}
+          resources:
+            limits:
+              cpu: "1"
+              memory: 32Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "1"
+              memory: 32Mi
+              ephemeral-storage: 32Mi
+          command:
+            - /bin/bash
+            - -c
+            - >
+              set -x;
+              cd /certs && cp /etc/ssl/certs/* . &&
+              cp /ingress/ca.crt local-ingress;
+              h=$(openssl x509 -hash -in local-ingress  | head -1);
+              for p in 0 1 2 3 4 5; do
+                ln -s local-ingress "$h.$p";
+              done;
+              cat local-ingress >> ca-certificates.crt
+          volumeMounts:
+            - name: cert-volume
+              mountPath: /certs
+            - name: ingress-secret
+              mountPath: /ingress
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+{{- end }}
+      restartPolicy: Always
+      enableServiceLinks: false
+      serviceAccountName: gc-launcher
+      volumes:
+        - name: kubernetes-driver
+          configMap:
+            name: kubernetes-driver
+        - name: temp
+          emptyDir: {}
+{{ if .Values.certificates.invalidWorkaround }}
+        - name: cert-volume
+          emptyDir: {}
+        - name: ingress-secret
+          secret:
+            secretName: ingress-tls
+{{- end }}

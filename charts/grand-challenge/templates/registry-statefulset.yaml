@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
+  labels:
+    service: registry
+  name: registry
+spec:
+  replicas: 1
+  serviceName: registry
+  selector:
+    matchLabels:
+      service: registry
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: registry
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 15000
+        runAsGroup: 15000
+      containers:
+        - env:
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: "true"
+          image: {{ .Values.images.registry }}
+          name: registry
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "0.2"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /var/lib/registry
+              name: registry-data
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: registry-data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            # NOTE: This is a pretty wild guess
+            storage: 1Gi

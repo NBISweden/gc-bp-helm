@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes, container-security-context-user-group-id
+  labels:
+    service: workstation-proxy
+  name: workstation-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: workstation-proxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        service: workstation-proxy
+    spec:
+      securityContext:
+        runAsUser: 20000
+        runAsGroup: 20000
+      serviceAccountName: workstation-proxy
+      containers:
+        - args:
+            - --entrypoints.traefik.address=:8081
+            - --entrypoints.metrics.address=:9101
+            - --entrypoints.workstation-http.address=:8000
+            - --entrypoints.workstation-websocket.address=:8001
+            - --api=true
+            - --api.insecure=true
+            - --ping=true
+            - --ping.entryPoint=traefik
+            - --accesslog=true
+            - --providers.kubernetesingress=true
+            - --providers.kubernetesingress.namespaces={{ .Values.namespace | default .Release.Namespace }}
+            - --providers.kubernetesingress=true
+          image: {{ .Values.images.traefik }}
+          name: workstation-proxy
+          ports:
+            - containerPort: 8081
+            - containerPort: 9101
+          resources:
+            limits:
+              cpu: "0.2"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "0.2"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: temp
+              mountPath: /tmp
+      volumes:
+        - name: temp
+          emptyDir: {}
+      restartPolicy: Always
+status: {}

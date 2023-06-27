@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
+  labels:
+    service: celery-beat
+  name: celery-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: celery-beat
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: celery-beat
+    spec:
+      securityContext:
+        runAsUser: 17000
+        runAsGroup: 17000
+      containers:
+        - args:
+            - bash
+            - -c
+            - "cd /app && celery -A config beat 
+                --scheduler django_celery_beat.schedulers:DatabaseScheduler 
+                "
+          env:
+            - name: DEBUG
+              value: {{ quote .Values.debug }}
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres-secret
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres-secret
+          image: {{ .Values.images.web }}
+          name: celery-beat
+          resources:
+            limits:
+              cpu: "0.2"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "0.2"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+      restartPolicy: Always
+      enableServiceLinks: false

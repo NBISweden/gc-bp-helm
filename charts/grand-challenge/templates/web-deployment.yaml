@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
+  labels:
+    service: web
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: web
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: web
+    spec:
+      securityContext:
+        runAsUser: 16000
+        runAsGroup: 16000
+      containers:
+        - args:
+            - bash
+            - -c
+            - "./manage.py migrate && ./manage.py runserver 0.0.0.0:8000"
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: accesskey
+                  name: minio-secret
+            - name: AWS_S3_ENDPOINT_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: minio-secret
+{{ if .Values.minio.internal_url }}
+            - name: AWS_S3_INTERNAL_URL
+              valueFrom:
+                secretKeyRef:
+                  key: internal_url
+                  name: minio-secret
+{{ end }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secretkey
+                  name: minio-secret
+            - name: COMPONENTS_DOCKER_TASK_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: components-access
+                  name: minio-secret
+            - name: COMPONENTS_DOCKER_TASK_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: components-secret
+                  name: minio-secret
+            - name: COMPONENTS_DEFAULT_BACKEND
+              value: grandchallenge.components.backends.kubernetes.KubernetesExecutor
+            - name: COMPONENTS_REGISTRY_INSECURE
+              value: "false"
+            # This wouldn't be needed if GC allowed for specifying credentials
+            - name: COMPONENTS_REGISTRY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  key: prefix
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: registry-secret
+            - name: COMPONENTS_REGISTRY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: registry-secret
+            - name: DEBUG
+              value: {{ quote .Values.debug }}
+            - name: GRAND_CHALLENGE_LOG_LEVEL
+              value: {{ .Values.log.grandChallengeLevel }}
+            - name: DJANGO_LOG_LEVEL
+              value: {{ .Values.log.djangoLevel }}
+            - name: SESSION_COOKIE_DOMAIN
+              value: ".{{ .Values.domainName }}"
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres-secret
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres-secret
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres-secret
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+          image: {{ .Values.images.web }}
+          name: web
+          resources:
+            limits:
+              cpu: "16"
+              memory: 2Gi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "2"
+              memory: 256Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          volumeMounts:
+{{ if .Values.certificates.invalidWorkaround }}
+            - name: cert-volume
+              mountPath: /etc/ssl/certs
+            - name: cert-volume
+              mountPath: /opt/poetry/.venv/lib/python3.10/site-packages/certifi/cacert.pem
+              subPath: ca-certificates.crt
+{{- end }}
+            - name: kubernetes-driver
+              mountPath: /app/grandchallenge/components/backends/kubernetes.py
+              subPath: kubernetes.py
+            - name: temp
+              mountPath: /app/scripts
+            - name: kubernetes-driver
+              mountPath: /app/grandchallenge/components/registry.py
+              subPath: registry.py
+{{ if .Values.certificates.invalidWorkaround }}
+      initContainers:
+        - name: cert-fixer
+          image: {{ .Values.images.web }}
+          resources:
+            limits:
+              cpu: "1"
+              memory: 32Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "1"
+              memory: 32Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          command:
+            - /bin/bash
+            - -c
+            - >
+              set -x;
+              cd /certs && cp /etc/ssl/certs/* . &&
+              cp /ingress/ca.crt local-ingress;
+              h=$(openssl x509 -hash -in local-ingress  | head -1);
+              for p in 0 1 2 3 4 5; do
+                ln -s local-ingress "$h.$p";
+              done;
+              cat local-ingress >> ca-certificates.crt
+          volumeMounts:
+            - name: cert-volume
+              mountPath: /certs
+            - name: ingress-secret
+              mountPath: /ingress
+{{- end }}
+      restartPolicy: Always
+      serviceAccountName: gc-launcher
+
+      volumes:
+        - name: temp
+          emptyDir: {}
+        - name: kubernetes-driver
+          configMap:
+            name: kubernetes-driver
+{{ if .Values.certificates.invalidWorkaround }}
+        - name: cert-volume
+          emptyDir: {}
+        - name: ingress-secret
+          secret:
+            secretName: ingress-tls
+{{- end }}

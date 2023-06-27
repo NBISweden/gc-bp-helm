@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kube-score/ignore: container-image-pull-policy, pod-probes
+  labels:
+    service: minio
+  name: minio
+spec:
+  replicas: 1
+  serviceName: minio
+  selector:
+    matchLabels:
+      service: minio
+  template:
+    metadata:
+      annotations:
+      labels:
+        service: minio
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 14000
+        runAsGroup: 14000
+      containers:
+        - args:
+            - -c
+            - >
+              mkdir -p /data/ &&
+              minio --compat server /data
+          command:
+            - /bin/sh
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  key: accesskey
+                  name: minio-secret
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: secretkey
+                  name: minio-secret
+          image: {{ .Values.images.minio }}
+          name: minio
+          ports:
+            - containerPort: 9000
+          resources:
+            limits:
+              cpu: 1
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            requests:
+              cpu: 1
+              memory: 64Mi
+              ephemeral-storage: 256Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 30
+            failureThreshold: 30
+            timeoutSeconds: 8
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 15
+            failureThreshold: 30
+            timeoutSeconds: 8
+          volumeMounts:
+            - mountPath: /data/
+              name: minio-data
+        - args:
+            - -c
+            - >
+                HOME=/tmp;
+                i=0;
+                while [ "$i" -lt 60 ]; do
+                  if curl -s http://127.0.0.1:9000/ ; then
+                    break
+                  fi
+                  sleep 1;
+                  i=$((i+1))
+                done;
+                mc alias set local http://127.0.0.1:9000/ "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" &&
+                mc admin user add local "$COMPACC" "$COMPSEC" &&
+                set -x;
+                mc mb --ignore-existing local/grand-challenge-private &&
+                mc mb --ignore-existing local/grand-challenge-protected &&
+                mc mb --ignore-existing local/grand-challenge-public &&
+                mc mb --ignore-existing local/grand-challenge-uploads &&
+                mc mb --ignore-existing local/grand-challenge-components-inputs &&
+                mc mb --ignore-existing local/grand-challenge-components-outputs &&
+                mc anonymous set download local/grand-challenge-public &&
+                ( mc admin policy attach local readwrite --user "$COMPACC" ||
+                  true Ignore any error directly before this) &&
+                while true; do
+                  sleep 60;
+                done
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 128Mi
+              ephemeral-storage: 32Mi
+            requests:
+              cpu: "0.5"
+              memory: 16Mi
+              ephemeral-storage: 32Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          command:
+            - /bin/bash
+          env:
+            - name: COMPACC
+              valueFrom:
+                secretKeyRef:
+                  key: components-access
+                  name: minio-secret
+            - name: COMPSEC
+              valueFrom:
+                secretKeyRef:
+                  key: components-secret
+                  name: minio-secret
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  key: accesskey
+                  name: minio-secret
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: secretkey
+                  name: minio-secret
+          image: {{ .Values.images.mc }}
+          name: minio-setup
+          volumeMounts:
+            - mountPath: /tmp/
+              name: setup-tmp
+      volumes:
+        - name: setup-tmp
+          emptyDir: {}
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: minio-data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            # NOTE: This is a pretty wild guess
+            storage: 5Gi

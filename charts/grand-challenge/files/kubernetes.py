@@ -315,7 +315,6 @@ class KubernetesExecutor(Executor):
                 raise ComponentException("Time limit exceeded")
         finally:
             self._set_task_logs()
-            time.sleep(60)
             self.delete_job(name=self.job_name)
 
         logger.debug(f"Response from {response.text}")

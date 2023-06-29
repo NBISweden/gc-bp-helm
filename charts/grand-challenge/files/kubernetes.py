@@ -277,6 +277,13 @@ class KubernetesExecutor(Executor):
                                     {"name": "input", "mountPath": "/input"},
                                     {"name": "output", "mountPath": "/output"},
                                 ],
+                                "resources": {
+                                    "limits": {
+                                        "memory": f"{self._memory_limit}Gi",
+                                        "ephemeral-storage": "8Gi",
+                                    },
+                                    "requests": {"memory": f"{self._memory_limit}Gi"},
+                                },
                             }
                         ],
                         "restartPolicy": "Never",
@@ -308,7 +315,6 @@ class KubernetesExecutor(Executor):
                 raise ComponentException("Time limit exceeded")
         finally:
             self._set_task_logs()
-            time.sleep(60)
             self.delete_job(name=self.job_name)
 
         logger.debug(f"Response from {response.text}")

@@ -277,6 +277,13 @@ class KubernetesExecutor(Executor):
                                     {"name": "input", "mountPath": "/input"},
                                     {"name": "output", "mountPath": "/output"},
                                 ],
+                                "resources": {
+                                    "limits": {
+                                        "memory": f"{self._memory_limit}Gi",
+                                        "ephemeral-storage": "8Gi",
+                                    },
+                                    "requests": {"memory": f"{self._memory_limit}Gi"},
+                                },
                             }
                         ],
                         "restartPolicy": "Never",

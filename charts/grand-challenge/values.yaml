@@ -40,7 +40,7 @@ images:
   redis: redis@sha256:fc5ecd863862f89f04334b7cbb57e93c9790478ea8188a49f6e57b0967d38c75
   # registry:2.7
   registry: registry@sha256:169211e20e2f2d5d115674681eb79d21a217b296b43374b8e39f97fcf866b375
-
+  backup: ghcr.io/nbisweden/sda-services-backup:v0.1.35
 postgres:
   username: username
   password: password
@@ -63,5 +63,24 @@ registry:
   # For network policy
   ip: 10.0.0.1/32
 
+backupconfig:
+  enabled: true
+  publickeypath: "/.secrets/keys/key.pub.pem"
+  privatekeypath: "/.secrets/keys/key.sec.pem"
+  db: 
+    host:
+    user:
+    password:
+    database: 
+    sslmode:
+  s3:
+    url:
+    accesskey:
+    secretkey:
+    bucket:  
+backupkeys:
+  publickey:
+  privatekey:
+  keypassphrase: 
 # To override if needed, should be automatic with helm install
 #namespace: yournamespace

@@ -1,0 +1,64 @@
+{{ if .Values.backupconfig.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+    name: gc-backup-cronjob
+spec:
+    schedule: "0 0 1 * *"
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 1
+    jobTemplate:
+        spec:
+            template:
+                spec:
+                    securityContext:
+                      runAsUser: 1000 
+                      runAsGroup: 1000
+                      fsGroup: 1000
+                    volumes:
+                    - name: "tmp"
+                      emptyDir: 
+                        sizeLimit: "1Gi"
+                    - name: "cronjob"
+                      secret:
+                        secretName: "gc-backup-secret"
+
+                    containers:
+                    - name: gc-backup-container
+                      image: {{ .Values.images.backup }}
+                      imagePullPolicy: Always
+                      env:
+                      - name: CONFIGFILE  
+                        value: "/.secrets/config.yaml"
+                      command:
+                      - /usr/local/bin/backup-svc
+                      - --action
+                      - pg_dump
+                      volumeMounts:
+                      - name: "tmp"
+                        mountPath: "/tmp"
+                      - name: "tls-certs"
+                        mountPath: "/.secrets/tls"
+                      - name: "cronjob"
+                        mountPath: "/.secrets/config.yaml"
+                        subPath: "config.yaml"
+                      - name: "cronjob"
+                        mountPath: "/.secrets/keys/key.pub.pem"
+                        subPath: "key.pub.pem"
+                      - name: "cronjob"
+                        mountPath: "/.secrets/keys/key.sec.pem"
+                        subPath: "key.sec.pem"
+                      resources:
+                        requests: 
+                            cpu: "100m"
+                            memory: "128M"
+                        limits: 
+                            cpu: "100m"
+                            memory: "128M"
+                      securityContext:
+                        allowPrivilegeEscalation: false
+                        readOnlyRootFilesystem: true
+                      
+                    restartPolicy: OnFailure
+
+{{ end }}

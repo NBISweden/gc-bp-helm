@@ -64,9 +64,8 @@ registry:
   ip: 10.0.0.1/32
 
 backupconfig:
-  enabled: true
-  publickeypath: "/.secrets/keys/key.pub.pem"
-  privatekeypath: "/.secrets/keys/key.sec.pem"
+  enabled: false
+  loglevel: 
   db: 
     host:
     user:

@@ -20,9 +20,11 @@ spec:
                       emptyDir: 
                         sizeLimit: "1Gi"
                     - name: "cronjob"
-                      secret:
-                        secretName: "gc-backup-secret"
-
+                      projected:
+                        defaultMode: 0400
+                        sources:
+                        - secret:
+                            name: "gc-backup-secret"
                     containers:
                     - name: gc-backup-container
                       image: {{ .Values.images.backup }}
@@ -37,8 +39,6 @@ spec:
                       volumeMounts:
                       - name: "tmp"
                         mountPath: "/tmp"
-                      - name: "tls-certs"
-                        mountPath: "/.secrets/tls"
                       - name: "cronjob"
                         mountPath: "/.secrets/config.yaml"
                         subPath: "config.yaml"
@@ -57,8 +57,7 @@ spec:
                             memory: "128M"
                       securityContext:
                         allowPrivilegeEscalation: false
-                        readOnlyRootFilesystem: true
-                      
+                        readOnlyRootFilesystem: true  
                     restartPolicy: OnFailure
 
 {{ end }}

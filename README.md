@@ -13,6 +13,21 @@ This builds on the Grand-challenge repo <https://github.com/comic/grand-challeng
 A `docker pull` of the original image should present a line like
 `Digest: sha256:...` you can just pick the digest from there.
 
+## Development setup
+
+### Setup Minikube
+```Bash
+minikube start 
+minikube addons enable ingress
+minikube addons enable ingress-dns
+```
+
+### Set up Cluster issuer
+```Bash
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.1/cert-manager.yaml
+```
+
+
 ## User setup
 
 The base reposiotry contains a script directory with scripts that can be

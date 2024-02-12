@@ -2,6 +2,15 @@ apiVersion: v1
 entries:
   grand-challenge:
   - apiVersion: v2
+    created: "2024-02-12T14:24:33.6005359Z"
+    description: Chart for grand-challenge installation
+    digest: 03af6a29f4f9fd1f4f60fb6be13bfcc00396cbea491c1d19826aaba91ef995fa
+    name: grand-challenge
+    type: application
+    urls:
+    - https://github.com/NBISweden/gc-bp-helm/releases/download/grand-challenge-0.1.4/grand-challenge-0.1.4.tgz
+    version: 0.1.4
+  - apiVersion: v2
     created: "2024-02-09T13:48:14.71555905Z"
     description: Chart for grand-challenge installation
     digest: ca254166335cf65c84b377c617cae6ff27a0428d8aab3d0b5fb343372aa3af8d
@@ -46,4 +55,4 @@ entries:
     urls:
     - https://github.com/nbisweden/gc-bp-helm/releases/download/0.0.9/grand-challenge-0.0.9.tgz
     version: 0.0.9
-generated: "2024-02-09T13:48:14.715581933Z"
+generated: "2024-02-12T14:24:33.600569082Z"

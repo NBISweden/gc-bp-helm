@@ -65,6 +65,7 @@ registry:
 
 backupconfig:
   enabled: false
+  schedule: "0 0 1 * *"
   loglevel: 
   db: 
     host:

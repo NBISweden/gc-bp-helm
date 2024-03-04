@@ -4,11 +4,13 @@ kind: CronJob
 metadata:
     name: gc-backup-cronjob
 spec:
-    schedule: "0 0 1 * *"
+    schedule: {{ .Values.backupconfig.schedule }}
     concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 1
+    startingDeadlineSeconds: 3600
     jobTemplate:
         spec:
+            backoffLimit: 2
+            ttlSecondsAfterFinished: 120
             template:
                 spec:
                     securityContext:
@@ -56,6 +58,10 @@ spec:
                             cpu: "100m"
                             memory: "128M"
                       securityContext:
+                        seccompProfile:
+                          type: RuntimeDefault
+                        capabilities:
+                          drop: ["ALL"]
                         allowPrivilegeEscalation: false
                         readOnlyRootFilesystem: true  
                     restartPolicy: OnFailure
